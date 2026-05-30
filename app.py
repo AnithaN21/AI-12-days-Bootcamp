@@ -1,106 +1,174 @@
 import streamlit as st
-from google import genai
-import json
+import google.generativeai as genai
 
-st.set_page_config(page_title="Résumé Scorer", layout="wide")
+# -------------------------------
+# PAGE CONFIG
+# -------------------------------
+st.set_page_config(
+    page_title="AI Faculty Assistant",
+    page_icon="🎓",
+    layout="wide"
+)
 
-st.title("Résumé vs JD Fit Scorer")
-st.caption("Day 5 Lab 5A — Gemini + Continue.dev + Streamlit")
+# -------------------------------
+# GEMINI API CONFIG
+# -------------------------------
+genai.configure(api_key="AQ.Ab8RN6KPbCo6d_0gPuFbPaOe-RpYJ_Ge095f3tj0BSOCmMxgtA")
 
-col1, col2 = st.columns(2)
+model = genai.GenerativeModel("gemini-2.5-flash")
 
-with col1:
-    resume = st.text_area("Paste résumé", height=400)
+# -------------------------------
+# CUSTOM CSS
+# -------------------------------
+st.markdown("""
+<style>
 
-with col2:
-    jd = st.text_area("Paste job description", height=400)
+.main {
+    background-color: #f5f7fb;
+}
 
-api_key = st.text_input("Gemini API key", type="password")
+.big-title {
+    text-align: center;
+    color: #1e293b;
+    font-size: 55px;
+    font-weight: bold;
+}
 
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-except Exception:
-    pass
+.sub-title {
+    text-align: center;
+    color: #64748b;
+    font-size: 20px;
+    margin-bottom: 30px;
+}
 
-if st.button("Score") and resume and jd and api_key:
-    with st.spinner("Scoring..."):
-        client = genai.Client(api_key=api_key)
+.stButton > button {
+    background: linear-gradient(90deg,#4F46E5,#7C3AED);
+    color: white;
+    border-radius: 12px;
+    height: 3.2em;
+    width: 220px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(90deg,#4338CA,#6D28D9);
+}
+
+.result-box {
+    padding: 20px;
+    border-radius: 15px;
+    background-color: white;
+    box-shadow: 0px 2px 12px rgba(0,0,0,0.1);
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# SIDEBAR
+# -------------------------------
+with st.sidebar:
+
+    st.title("🎓 Faculty Assistant")
+
+    st.markdown("---")
+
+    st.success("AI Powered Teaching Assistant")
+
+    st.markdown("""
+### Features
+
+✅ Learning Objectives
+
+✅ Lecture Outline
+
+✅ MCQs Generation
+
+✅ Topic Summary
+
+✅ Faculty Support
+
+✅ Gemini AI Powered
+""")
+
+    st.markdown("---")
+
+    st.info("Created using Streamlit + Gemini AI")
+
+# -------------------------------
+# HEADER
+# -------------------------------
+st.markdown("""
+<div class='big-title'>
+🎓 AI Faculty Assistant
+</div>
+
+<div class='sub-title'>
+Generate Learning Objectives, Lecture Plans, MCQs and Summaries using AI
+</div>
+""", unsafe_allow_html=True)
+
+# -------------------------------
+# INPUT
+# -------------------------------
+st.subheader("📚 Enter Topic")
+
+topic = st.text_input(
+    "",
+    placeholder="Example: Artificial Intelligence, Data Structures, Cloud Computing"
+)
+
+# -------------------------------
+# BUTTON ACTION
+# -------------------------------
+if st.button("🚀 Generate Content"):
+
+    if topic.strip() == "":
+        st.warning("Please enter a topic.")
+    else:
 
         prompt = f"""
-You are a placement coach.
+Act as an expert faculty assistant.
 
-Given this résumé and job description, return only valid JSON in this exact format:
+Topic: {topic}
 
-{{
-  "score": 0,
-  "rationale": "short explanation",
-  "missing_skills": ["skill1", "skill2"],
-  "suggestions": ["suggestion1", "suggestion2"],
-  "technical_skills_match": 0,
-  "soft_skills_match": 0,
-  "experience_relevance": 0,
-  "project_fit": 0,
-  "learning_resources": [
-    {{
-      "skill": "Docker",
-      "resource_type": "YouTube",
-      "link": "https://youtube.com/example"
-    }}
-  ]
-}}
+Generate the following:
 
-Rules:
-- score must be between 0 and 100.
-- sub-scores must be between 0 and 100.
-- missing_skills must contain only real missing skills, not generic words.
-- learning_resources must suggest free learning resources.
+# Learning Objectives
+Provide exactly 3 learning objectives.
 
-Résumé:
-{resume}
+# Lecture Outline
+Provide a lecture outline with 5 points.
 
-Job Description:
-{jd}
+# MCQs
+Provide exactly 5 multiple choice questions with:
+- 4 options
+- Correct answer
+
+# Summary
+Provide a short summary in 5 lines.
 """
 
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config={"response_mime_type": "application/json"}
-        )
+        with st.spinner("🤖 AI is preparing your content..."):
 
-        try:
-            result = json.loads(resp.text)
+            response = model.generate_content(prompt)
 
-            st.metric("Fit Score", f"{result['score']}/100")
+        st.success("✅ Content Generated Successfully")
 
-            st.subheader("Score Breakdown")
-            breakdown = {
-                "Technical Skills Match": result.get("technical_skills_match", 0),
-                "Soft Skills Match": result.get("soft_skills_match", 0),
-                "Experience Relevance": result.get("experience_relevance", 0),
-                "Project Fit": result.get("project_fit", 0),
-            }
-            st.bar_chart(breakdown)
+        st.markdown("---")
 
-            st.subheader("Rationale")
-            st.write(result.get("rationale", ""))
+        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
 
-            st.subheader("Missing Skills")
-            for skill in result.get("missing_skills", []):
-                st.write(f"- {skill}")
+        st.markdown("## 📖 Generated Content")
 
-            st.subheader("Suggestions")
-            for suggestion in result.get("suggestions", []):
-                st.write(f"- {suggestion}")
+        st.write(response.text)
 
-            st.subheader("Top Missing Skills with Learning Resources")
-            for item in result.get("learning_resources", []):
-                st.write(
-                    f"- **{item.get('skill', '')}** "
-                    f"({item.get('resource_type', '')}): "
-                    f"{item.get('link', '')}"
-                )
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        except json.JSONDecodeError:
-            st.error("Could not parse Gemini response as JSON.")
-            st.write(resp.text)
+# -------------------------------
+# FOOTER
+# -------------------------------
+st.markdown("---")
+st.caption("© 2026 AI Faculty Assistant | Powered by Google Gemini")
