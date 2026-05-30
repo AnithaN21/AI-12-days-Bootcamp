@@ -15,7 +15,9 @@ st.set_page_config(
 # -------------------------------
 genai.configure(api_key="AQ.Ab8RN6KPbCo6d_0gPuFbPaOe-RpYJ_Ge095f3tj0BSOCmMxgtA")
 
-model = genai.GenerativeModel("gemini-2.5-flash")
+genai.configure(
+    api_key=st.secrets["GEMINI_API_KEY"]
+)
 
 # -------------------------------
 # CUSTOM CSS
