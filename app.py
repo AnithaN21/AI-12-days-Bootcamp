@@ -1,130 +1,100 @@
 import streamlit as st
 import google.generativeai as genai
 
-# -------------------------------
-# PAGE CONFIG
-# -------------------------------
+# Page Config
 st.set_page_config(
     page_title="AI Faculty Assistant",
     page_icon="🎓",
     layout="wide"
 )
 
-# -------------------------------
-# GEMINI API CONFIG
-# -------------------------------
-genai.configure(api_key="AQ.Ab8RN6KPbCo6d_0gPuFbPaOe-RpYJ_Ge095f3tj0BSOCmMxgtA")
+# Gemini API Key from Streamlit Secrets
+genai.configure(api_key=st.secrets["AQ.Ab8RN6KPbCo6d_0gPuFbPaOe-RpYJ_Ge095f3tj0BSOCmMxgtA"])
 
-genai.configure(
-    api_key=st.secrets["GEMINI_API_KEY"]
-)
+# Gemini Model
+model = genai.GenerativeModel("gemini-2.5-flash")
 
-# -------------------------------
-# CUSTOM CSS
-# -------------------------------
+# Custom CSS
 st.markdown("""
 <style>
-
 .main {
-    background-color: #f5f7fb;
+    background: linear-gradient(to right, #eef2ff, #f8fafc);
 }
 
-.big-title {
+.title {
     text-align: center;
-    color: #1e293b;
     font-size: 55px;
     font-weight: bold;
+    color: #1e3a8a;
 }
 
-.sub-title {
+.subtitle {
     text-align: center;
-    color: #64748b;
     font-size: 20px;
+    color: #475569;
     margin-bottom: 30px;
 }
 
-.stButton > button {
-    background: linear-gradient(90deg,#4F46E5,#7C3AED);
-    color: white;
-    border-radius: 12px;
-    height: 3.2em;
-    width: 220px;
-    font-size: 18px;
-    font-weight: bold;
-    border: none;
-}
-
-.stButton > button:hover {
-    background: linear-gradient(90deg,#4338CA,#6D28D9);
+.feature-box {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
 }
 
 .result-box {
-    padding: 20px;
-    border-radius: 15px;
     background-color: white;
-    box-shadow: 0px 2px 12px rgba(0,0,0,0.1);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0px 5px 20px rgba(0,0,0,0.1);
 }
-
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------------------
-# SIDEBAR
-# -------------------------------
+# Sidebar
 with st.sidebar:
-
     st.title("🎓 Faculty Assistant")
-
-    st.markdown("---")
 
     st.success("AI Powered Teaching Assistant")
 
+    st.markdown("### Features")
     st.markdown("""
-### Features
+    ✅ Learning Objectives
 
-✅ Learning Objectives
+    ✅ Lecture Outline
 
-✅ Lecture Outline
+    ✅ MCQs Generation
 
-✅ MCQs Generation
+    ✅ Topic Summary
 
-✅ Topic Summary
+    ✅ Faculty Support
 
-✅ Faculty Support
-
-✅ Gemini AI Powered
-""")
-
-    st.markdown("---")
+    ✅ Gemini AI Powered
+    """)
 
     st.info("Created using Streamlit + Gemini AI")
 
-# -------------------------------
-# HEADER
-# -------------------------------
-st.markdown("""
-<div class='big-title'>
-🎓 AI Faculty Assistant
-</div>
+# Main Header
+st.markdown(
+    "<div class='title'>🎓 AI Faculty Assistant</div>",
+    unsafe_allow_html=True
+)
 
-<div class='sub-title'>
-Generate Learning Objectives, Lecture Plans, MCQs and Summaries using AI
-</div>
-""", unsafe_allow_html=True)
+st.markdown(
+    "<div class='subtitle'>Generate Learning Objectives, Lecture Plans, MCQs and Summaries using AI</div>",
+    unsafe_allow_html=True
+)
 
-# -------------------------------
-# INPUT
-# -------------------------------
-st.subheader("📚 Enter Topic")
+# Topic Input
+st.markdown("## 📚 Enter Topic")
 
 topic = st.text_input(
     "",
-    placeholder="Example: Artificial Intelligence, Data Structures, Cloud Computing"
+    placeholder="Example: Data Structures, Machine Learning, DBMS..."
 )
 
-# -------------------------------
-# BUTTON ACTION
-# -------------------------------
+# Generate Button
 if st.button("🚀 Generate Content"):
 
     if topic.strip() == "":
@@ -132,45 +102,32 @@ if st.button("🚀 Generate Content"):
     else:
 
         prompt = f"""
-Act as an expert faculty assistant.
+        Act as an expert faculty assistant.
 
-Topic: {topic}
+        Topic: {topic}
 
-Generate the following:
+        Generate the following:
 
-# Learning Objectives
-Provide exactly 3 learning objectives.
+        ## Learning Objectives
+        Provide exactly 3 learning objectives.
 
-# Lecture Outline
-Provide a lecture outline with 5 points.
+        ## Lecture Outline
+        Provide a lecture outline with 5 points.
 
-# MCQs
-Provide exactly 5 multiple choice questions with:
-- 4 options
-- Correct answer
+        ## MCQs
+        Provide exactly 5 multiple choice questions with 4 options and the correct answer.
 
-# Summary
-Provide a short summary in 5 lines.
-"""
+        ## Summary
+        Provide a short summary in 5 lines.
+        """
 
-        with st.spinner("🤖 AI is preparing your content..."):
+        with st.spinner("Generating content..."):
 
             response = model.generate_content(prompt)
 
-        st.success("✅ Content Generated Successfully")
+            st.markdown("## 📖 Generated Content")
 
-        st.markdown("---")
-
-        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
-
-        st.markdown("## 📖 Generated Content")
-
-        st.write(response.text)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# -------------------------------
-# FOOTER
-# -------------------------------
-st.markdown("---")
-st.caption("© 2026 AI Faculty Assistant | Powered by Google Gemini")
+            st.markdown(
+                f"<div class='result-box'>{response.text}</div>",
+                unsafe_allow_html=True
+            )
